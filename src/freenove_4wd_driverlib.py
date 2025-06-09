@@ -10,6 +10,7 @@
 #   - Servo motor
 #   - Battery monitor
 #   - Neopixel LED strip
+#   - Ultrasonic sensor
 #
 # Changelog:
 #   07-06-2025: Initial version
@@ -20,9 +21,10 @@
 #
 ###############################################################################
 
+import machine
 from machine import Pin,PWM,ADC,I2C,Timer
 from neopixel import NeoPixel
-from time import sleep_ms
+from time import sleep_us,sleep_ms
 
 # Module version
 MODVER = "0.1"
@@ -35,6 +37,7 @@ LED_SEQ_BLINKFAST = (2,2)
 MOTOR_PWM_FREQ = 500
 SERVO_PWM_FREQ = 50
 NEO_BASIC_COLORS = ["R","G","B"]
+SPEED_OF_SOUND = 343 # in m/s
 
 
 #######################
@@ -93,7 +96,7 @@ class SERVO:
         # Restrict angle to value from angle_min to angle_max
         angle = max(min(angle,self._amax), self._amin)
         duty_ns = int(((angle/90) + 0.5) * 1000000)
-        print("setting servo angle: %d (duty: %d)" % (angle,duty_ns))
+        #print("setting servo angle: %d (duty: %d)" % (angle,duty_ns))
         self._pwm.duty_ns(duty_ns)
         
     def move(self,a1,a2):
@@ -208,6 +211,47 @@ class LEDSTRIP:
             self.fade(color, True)
             self.fade(color, False)
             
+
+#######################################################
+# ULTRASONIC sensor class
+#######################################################
+class ULTRASONIC:
+    def __init__(self, pin_trg, pin_echo):
+        self._pin_trig = Pin(pin_trg, Pin.OUT)
+        self._pin_echo = Pin(pin_echo, Pin.IN)
+        self._num_samples = 1
+        self._pin_trig.off()
+        
+    def _measure(self):
+        # Generate 10us high pulse on trigger output
+        self._pin_trig.on()
+        sleep_us(10)
+        self._pin_trig.off()
+        # Measure high pulse length in us on echo input
+        t = machine.time_pulse_us(self._pin_echo, 1)
+        if t >= 0:
+            # Calculate distance in cm
+            d = t * SPEED_OF_SOUND / 2 / 10000
+        else:
+            d = None
+        return d
+        
+    def distance(self):
+        d_sum = 0
+        d_cnt = 0
+        # Do a series of measurements
+        for _ in range(self._num_samples):
+            try:
+                d_sum += self._measure()
+                d_cnt += 1
+            except TypeError:
+                pass
+        if d_cnt > 0:
+            d = d_sum/d_cnt
+        else:
+            d = None
+        return d
+
 
 #######################################################
 # UPTIME counter class

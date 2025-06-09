@@ -101,6 +101,10 @@ sleep(DELAY_WAIT)
 s = freenove_4wd_hardware.init_servo()
 s.sweep()
 
+# Init Ultrasonic sensor
+u = freenove_4wd_hardware.init_ultrasonic()
+print("obstacle %.2f cm ahead" % u.distance())
+
 # Init motors and car
 (m1,m2,m3,m4) = freenove_4wd_hardware.init_motors()
 car = CAR(m1,m2,m3,m4)
