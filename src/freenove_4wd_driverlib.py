@@ -37,20 +37,36 @@ class MOTOR:
     def __init__(self, in1, in2):
         self._pwm1 = PWM(Pin(in1,Pin.OUT), freq=MOTOR_PWM_FREQ, duty_ns=0)
         self._pwm2 = PWM(Pin(in2,Pin.OUT), freq=MOTOR_PWM_FREQ, duty_ns=0)
+        self._min_speed = 40
+        self._min_duty_start = (self._min_speed*10000000)//MOTOR_PWM_FREQ
 
     def move(self,speed):
         # Restrict speed to value from -100% to +100%
         speed = max(min(speed,100),-100)
+        # Calculate duty cycle (in ns)
         duty_ns = (abs(speed)*10000000)//MOTOR_PWM_FREQ
+        boost_start = (speed != 0 and abs(speed) < self._min_speed)
         print("setting speed: %d (duty: %d)" % (speed,duty_ns))
         if speed<0:
             # Move backward
             self._pwm1.duty_ns(0)
+            if self._pwm2.duty_ns() == 0 and boost_start:
+                # Boost start needed:
+                # Apply min speed for 50 ms
+                print("apply boost start")
+                self._pwm2.duty_ns(self._min_duty_start)
+                sleep_ms(50)
             self._pwm2.duty_ns(duty_ns)
         else:
             # Move forward
-            self._pwm1.duty_ns(duty_ns)
             self._pwm2.duty_ns(0)
+            if self._pwm1.duty_ns() == 0 and boost_start:
+                # Boost start needed:
+                # Apply min speed for 50 ms
+                print("apply boost start")
+                self._pwm1.duty_ns(self._min_duty_start)
+                sleep_ms(50)
+            self._pwm1.duty_ns(duty_ns)
 
     def stop(self):
         self._pwm1.duty_ns(0)
