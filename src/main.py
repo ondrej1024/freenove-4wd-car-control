@@ -5,6 +5,10 @@ from time import sleep
 DELAY_ACTION = 2
 DELAY_WAIT   = 2
 
+
+#######################
+# BATTERY class
+#######################
 class CAR:
     def __init__(self,m1,m2,m3,m4):
         self._m1 = m1
@@ -53,13 +57,13 @@ class CAR:
         self._m1.move(speed)
         self._m2.move(speed)
         # Right wheels
-        self._m3.move(15)
-        self._m4.move(15)
+        self._m3.move(0)
+        self._m4.move(0)
         
     def turn_left(self,speed):
         # Left wheels
-        self._m1.move(15)
-        self._m2.move(15)
+        self._m1.move(0)
+        self._m2.move(0)
         # Right wheels
         self._m3.move(speed)
         self._m4.move(speed)
@@ -79,10 +83,16 @@ class CAR:
 
 # Init led
 l = freenove_4wd_hardware.init_led()
+l.on()
 
 # Init battery monitor
 b = freenove_4wd_hardware.init_batt_mon()
 print("battery voltage is %.2fV (%d%%)" % (b.voltage(),b.perc()))
+sleep(DELAY_WAIT)
+
+# Init servo
+s = freenove_4wd_hardware.init_servo()
+s.sweep()
 
 # Init motors
 (m1,m2,m3,m4) = freenove_4wd_hardware.init_motors()
@@ -117,13 +127,13 @@ car.stop()
 sleep(DELAY_WAIT)
 
 # Turn left
-car.turn_left(40)
+car.turn_left(30)
 sleep(DELAY_ACTION)
 car.stop()
 sleep(DELAY_WAIT)
 
 # Turn right
-car.turn_right(40)
+car.turn_right(30)
 sleep(DELAY_ACTION)
 car.stop()
 sleep(DELAY_WAIT)

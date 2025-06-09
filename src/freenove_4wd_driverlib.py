@@ -6,6 +6,8 @@
 #
 # Description:
 #   This library implements the drivers for the following devices:
+#   - DC Motor
+#   - Servo motor
 #
 # Changelog:
 #   07-06-2025: Initial version
@@ -28,6 +30,7 @@ LED_SEQ_BLINKSLOW = (10,10)
 LED_SEQ_BLINKFAST = (2,2)
 
 MOTOR_PWM_FREQ = 500
+SERVO_PWM_FREQ = 50
 
 
 #######################
@@ -46,7 +49,7 @@ class MOTOR:
         # Calculate duty cycle (in ns)
         duty_ns = (abs(speed)*10000000)//MOTOR_PWM_FREQ
         boost_start = (speed != 0 and abs(speed) < self._min_speed)
-        print("setting speed: %d (duty: %d)" % (speed,duty_ns))
+        print("setting motor speed: %d (duty: %d)" % (speed,duty_ns))
         if speed<0:
             # Move backward
             self._pwm1.duty_ns(0)
@@ -73,6 +76,37 @@ class MOTOR:
         self._pwm2.duty_ns(0)
 
 
+#######################
+# SERVO class
+#######################
+class SERVO:
+    def __init__(self, pin):
+        self._pwm = PWM(Pin(pin,Pin.OUT), freq=SERVO_PWM_FREQ, duty_ns=1500000)
+        self._amin = 30
+        self._amax = 150
+        
+    def position(self,angle):
+        # Restrict angle to value from angle_min to angle_max
+        angle = max(min(angle,self._amax), self._amin)
+        duty_ns = int(((angle/90) + 0.5) * 1000000)
+        print("setting servo angle: %d (duty: %d)" % (angle,duty_ns))
+        self._pwm.duty_ns(duty_ns)
+        
+    def move(self,a1,a2):
+        if a1>a2:
+            step = -1
+        else:
+            step = 1
+        for a in range(a1,a2+step,step):
+            self.position(a)
+            sleep_ms(10)
+
+    def sweep(self):
+        self.move(90,self._amin)
+        self.move(self._amin,self._amax)
+        self.move(self._amax,90)
+        
+        
 #######################
 # BATTERY class
 #######################

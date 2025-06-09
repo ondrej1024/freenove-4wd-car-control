@@ -16,7 +16,7 @@
 ###############################################################################
 
 from machine import RTC,Pin,I2C,PWM,UART,ADC
-from freenove_4wd_driverlib import MOTOR,BATTERY,UPTIME,LEDCTL
+from freenove_4wd_driverlib import MOTOR,SERVO,BATTERY,UPTIME,LEDCTL
 
 # Module version
 MODVER = "0.1"
@@ -74,7 +74,7 @@ def __init_i2c():
 
 
 #######################
-# Init relay outputs
+# Init DC motors
 #######################
 def init_motors():
     motors = []
@@ -94,6 +94,16 @@ def init_batt_mon():
     print("Init battery monitor")
     bm = BATTERY(PIN_ADC_BATT)
     return bm
+
+
+#######################
+# Init Servo motor
+#######################
+def init_servo():
+
+    print("Init Servo")
+    s = SERVO(PIN_SRV1)
+    return s
 
 
 #######################
