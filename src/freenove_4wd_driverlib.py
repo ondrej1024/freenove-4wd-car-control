@@ -16,7 +16,7 @@
 #
 ###############################################################################
 
-from machine import Pin,PWM,I2C,Timer
+from machine import Pin,PWM,ADC,I2C,Timer
 from time import sleep_ms
 
 # Module version
@@ -73,6 +73,27 @@ class MOTOR:
         self._pwm2.duty_ns(0)
 
 
+#######################
+# BATTERY class
+#######################
+class BATTERY:
+    def __init__(self, pin):
+        self._adc = ADC(pin)
+        self._ref = 3.3   # PICO ADC reference voltage
+        self._scale = 4   # cars voltage divider R5(3K)/R6(1K)
+        self._vmax  = 8.4 # cars battery voltage (full)
+        self._vmin  = 0   # FIXME: find real min battery voltage
+        
+    def voltage(self):
+        v = (self._adc.read_u16()/0xFFFF) * self._ref * self._scale
+        return v
+        
+    def perc(self):
+        # FIXME: consider also vmin
+        p = int(round(self.voltage()/self._vmax*100))
+        return p
+        
+        
 #######################################################
 # UPTIME counter class
 # (weeks, days, hours, minutes, seconds)

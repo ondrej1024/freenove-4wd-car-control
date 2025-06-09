@@ -16,7 +16,7 @@
 ###############################################################################
 
 from machine import RTC,Pin,I2C,PWM,UART,ADC
-from freenove_4wd_driverlib import MOTOR,UPTIME,LEDCTL
+from freenove_4wd_driverlib import MOTOR,BATTERY,UPTIME,LEDCTL
 
 # Module version
 MODVER = "0.1"
@@ -89,12 +89,11 @@ def init_motors():
 #######################
 # Init ADC inputs
 #######################
-def init_adc():
+def init_batt_mon():
 
-    print("Init ADC inputs")
-    # TODO
-
-    return
+    print("Init battery monitor")
+    bm = BATTERY(PIN_ADC_BATT)
+    return bm
 
 
 #######################

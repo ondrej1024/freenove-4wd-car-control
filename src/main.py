@@ -80,6 +80,10 @@ class CAR:
 # Init led
 l = freenove_4wd_hardware.init_led()
 
+# Init battery monitor
+b = freenove_4wd_hardware.init_batt_mon()
+print("battery voltage is %.2fV (%d%%)" % (b.voltage(),b.perc()))
+
 # Init motors
 (m1,m2,m3,m4) = freenove_4wd_hardware.init_motors()
 
