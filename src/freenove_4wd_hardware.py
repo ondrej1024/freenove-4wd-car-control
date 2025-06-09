@@ -16,7 +16,7 @@
 ###############################################################################
 
 from machine import RTC,Pin,I2C,PWM,UART,ADC
-from freenove_4wd_driverlib import MOTOR,SERVO,BATTERY,UPTIME,LEDCTL
+from freenove_4wd_driverlib import MOTOR,SERVO,BATTERY,LEDSTRIP,UPTIME,LEDCTL
 
 # Module version
 MODVER = "0.1"
@@ -105,6 +105,14 @@ def init_servo():
     s = SERVO(PIN_SRV1)
     return s
 
+#######################
+# Init LED strip
+#######################
+def init_ledstrip():
+
+    print("Init LED strip")
+    l = LEDSTRIP(PIN_NEOPIX)
+    return l
 
 #######################
 # Init LEDs

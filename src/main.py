@@ -90,16 +90,20 @@ b = freenove_4wd_hardware.init_batt_mon()
 print("battery voltage is %.2fV (%d%%)" % (b.voltage(),b.perc()))
 sleep(DELAY_WAIT)
 
+# Init Neopixel LED strip
+n = freenove_4wd_hardware.init_ledstrip()
+n.walk("R")
+n.walk("G")
+n.walk("B")
+sleep(DELAY_WAIT)
+
 # Init servo
 s = freenove_4wd_hardware.init_servo()
 s.sweep()
 
-# Init motors
+# Init motors and car
 (m1,m2,m3,m4) = freenove_4wd_hardware.init_motors()
-
-# Init car
 car = CAR(m1,m2,m3,m4)
-
 sleep(DELAY_WAIT)
 
 # Move forward
@@ -137,3 +141,5 @@ car.turn_right(30)
 sleep(DELAY_ACTION)
 car.stop()
 sleep(DELAY_WAIT)
+
+n.blink("G")

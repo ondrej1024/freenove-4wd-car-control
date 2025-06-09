@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# Freenove 4WD car driver library
+# Freenove 4WD car device driver library
 #
 # Author: Ondrej Wisniewski
 #
@@ -8,6 +8,8 @@
 #   This library implements the drivers for the following devices:
 #   - DC Motor
 #   - Servo motor
+#   - Battery monitor
+#   - Neopixel LED strip
 #
 # Changelog:
 #   07-06-2025: Initial version
@@ -19,6 +21,7 @@
 ###############################################################################
 
 from machine import Pin,PWM,ADC,I2C,Timer
+from neopixel import NeoPixel
 from time import sleep_ms
 
 # Module version
@@ -31,6 +34,7 @@ LED_SEQ_BLINKFAST = (2,2)
 
 MOTOR_PWM_FREQ = 500
 SERVO_PWM_FREQ = 50
+NEO_BASIC_COLORS = ["R","G","B"]
 
 
 #######################
@@ -127,7 +131,84 @@ class BATTERY:
         p = int(round(self.voltage()/self._vmax*100))
         return p
         
+
+#######################
+# LEDSTRIP class
+#######################
+class LEDSTRIP:
+    def __init__(self, pin):
+        self._neo = NeoPixel(Pin(pin,Pin.OUT),8)
+
+    def allon(self,r,g,b):
+        self._neo.fill((r,g,b))
+        self._neo.write()
         
+    def alloff(self):
+        self._neo.fill((0,0,0))
+        self._neo.write()
+        
+    def blink(self,color,brightness=255,num=4):
+        if color in NEO_BASIC_COLORS:
+            brightness = max(min(brightness,255), 0)
+            for _ in range(num):
+                if color == "R":
+                    self.allon(brightness,0,0)
+                elif color == "G":
+                    self.allon(0,brightness,0)
+                elif color == "B":
+                    self.allon(0,0,brightness)
+                sleep_ms(200)
+                self.alloff()
+                sleep_ms(200)
+            
+    def walk(self,color,brightness=255,clockwise=True):
+        if color in NEO_BASIC_COLORS:
+            brightness = max(min(brightness,255), 0)
+            if clockwise == True:
+                first = 0
+                last = 8
+                step = 1
+            else:
+                first = 7
+                last = -1
+                step = -1
+            for i in range(first,last,step):
+                self._neo.fill((0,0,0))
+                if color == "R":
+                    self._neo[i] = (brightness,0,0)
+                elif color == "G":
+                    self._neo[i] = (0,brightness,0)
+                elif color == "B":
+                    self._neo[i] = (0,0,brightness)
+                self._neo.write()
+                sleep_ms(200)
+            self.alloff()
+        
+    def fade(self,color,inout):
+        if color in NEO_BASIC_COLORS:
+            if inout == True:
+                first = 0
+                last = 256
+                step = 1
+            else:
+                first = 255
+                last = -1
+                step = -1
+            for i in range(first,last,step):
+                if color == "R":
+                    self.allon(i,0,0)
+                elif color == "G":
+                    self.allon(0,i,0)
+                elif color == "B":
+                    self.allon(0,0,i)
+                sleep_ms(5)
+            
+    def breathe(self,color):
+        for _ in range(2):
+            self.fade(color, True)
+            self.fade(color, False)
+            
+
 #######################################################
 # UPTIME counter class
 # (weeks, days, hours, minutes, seconds)
