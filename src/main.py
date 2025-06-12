@@ -7,7 +7,7 @@ DELAY_WAIT   = 2
 
 
 #######################
-# BATTERY class
+# CAR class
 #######################
 class CAR:
     def __init__(self,m1,m2,m3,m4):
@@ -81,13 +81,20 @@ class CAR:
 #
 ###########################################################
 
+# Init motors
+(m1,m2,m3,m4) = freenove_4wd_hardware.init_motors()
+
 # Init led
 l = freenove_4wd_hardware.init_led()
 l.on()
 
+# Init buzzer
+bu = freenove_4wd_hardware.init_buzzer()
+bu.beep()
+
 # Init battery monitor
-b = freenove_4wd_hardware.init_batt_mon()
-print("battery voltage is %.2fV (%d%%)" % (b.voltage(),b.perc()))
+bm = freenove_4wd_hardware.init_batt_mon()
+print("battery voltage is %.2fV (%d%%)" % (bm.voltage(),bm.perc()))
 sleep(DELAY_WAIT)
 
 # Init Neopixel LED strip
@@ -104,9 +111,9 @@ s.sweep()
 # Init Ultrasonic sensor
 u = freenove_4wd_hardware.init_ultrasonic()
 print("obstacle %.2f cm ahead" % u.distance())
+sleep(DELAY_WAIT)
 
-# Init motors and car
-(m1,m2,m3,m4) = freenove_4wd_hardware.init_motors()
+# Init car
 car = CAR(m1,m2,m3,m4)
 sleep(DELAY_WAIT)
 

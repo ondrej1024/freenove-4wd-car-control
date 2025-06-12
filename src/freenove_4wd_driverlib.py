@@ -11,6 +11,7 @@
 #   - Battery monitor
 #   - Neopixel LED strip
 #   - Ultrasonic sensor
+#   - Buzzer
 #
 # Changelog:
 #   07-06-2025: Initial version
@@ -34,10 +35,11 @@ LED_SEQ_HEARTBEAT = (1,1,1,9)
 LED_SEQ_BLINKSLOW = (10,10)
 LED_SEQ_BLINKFAST = (2,2)
 
-MOTOR_PWM_FREQ = 500
-SERVO_PWM_FREQ = 50
+MOTOR_PWM_FREQ   = 500  # in Hz
+SERVO_PWM_FREQ   = 50   # in Hz
+BUZZER_PWM_FREQ  = 2000 # in Hz
+SPEED_OF_SOUND   = 343  # in m/s
 NEO_BASIC_COLORS = ["R","G","B"]
-SPEED_OF_SOUND = 343 # in m/s
 
 
 #######################
@@ -251,6 +253,36 @@ class ULTRASONIC:
         else:
             d = None
         return d
+
+
+#######################
+# BUZZER class
+#######################
+class BUZZER:
+    def __init__(self, pin):
+        # We cannot use HW PWM for the buzzer as its pin (2) overlaps with
+        # the PWM channel of a motor pin (18)
+        self._pin = Pin(pin,Pin.OUT)
+
+    def _softpwm(self,freq,duty=50,duration=100):
+        pulse_len = 1000000//freq # in us
+        pulse_len_hi = (pulse_len*duty)//100
+        pulse_len_lo = pulse_len - pulse_len_hi
+        cycles = (duration*1000)//pulse_len
+        for _ in range(cycles):
+            # Generate pulse
+            self._pin.on()
+            sleep_us(pulse_len_hi)
+            self._pin.off()
+            sleep_us(pulse_len_lo)
+
+    def beep(self, duration=100):
+        self._softpwm(BUZZER_PWM_FREQ,10,duration)
+        
+    def alarm(self, repeat=3):
+        for _ in range(repeat):
+            self.beep()
+            sleep_ms(100)
 
 
 #######################################################

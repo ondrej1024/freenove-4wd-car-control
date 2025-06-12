@@ -16,7 +16,7 @@
 ###############################################################################
 
 from machine import RTC,Pin,I2C,PWM,UART,ADC
-from freenove_4wd_driverlib import MOTOR,SERVO,BATTERY,LEDSTRIP,ULTRASONIC,UPTIME,LEDCTL
+from freenove_4wd_driverlib import MOTOR,SERVO,BATTERY,LEDSTRIP,ULTRASONIC,BUZZER,UPTIME,LEDCTL
 
 # Module version
 MODVER = "0.1"
@@ -105,6 +105,7 @@ def init_servo():
     s = SERVO(PIN_SRV1)
     return s
 
+
 #######################
 # Init LED strip
 #######################
@@ -114,6 +115,7 @@ def init_ledstrip():
     l = LEDSTRIP(PIN_NEOPIX)
     return l
 
+
 ########################
 # Init Ultrasonic sensor
 ########################
@@ -122,6 +124,17 @@ def init_ultrasonic():
     print("Init Ultrasonic sensor")
     u = ULTRASONIC(PIN_US_TRIG,PIN_US_ECHO)
     return u
+
+
+########################
+# Init Buzzer
+########################
+def init_buzzer():
+
+    print("Init Buzzer")
+    u = BUZZER(PIN_BUZZER)
+    return u
+
 
 #######################
 # Init LEDs
