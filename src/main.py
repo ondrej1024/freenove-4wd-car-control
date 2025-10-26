@@ -109,8 +109,13 @@ s = freenove_4wd_hardware.init_servo()
 s.sweep()
 
 # Init Ultrasonic sensor
-u = freenove_4wd_hardware.init_ultrasonic()
+u = freenove_4wd_hardware.init_ultrasonic(buzzer=bu)
+sleep(2)
 print("obstacle %.2f cm ahead" % u.distance())
+sleep(DELAY_WAIT)
+
+# Init Track sensor
+t = freenove_4wd_hardware.init_track(buzzer=bu)
 sleep(DELAY_WAIT)
 
 # Init car

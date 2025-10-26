@@ -11,6 +11,7 @@
 #   - Battery monitor
 #   - Neopixel LED strip
 #   - Ultrasonic sensor
+#   - Track sensor
 #   - Buzzer
 #
 # Changelog:
@@ -218,13 +219,18 @@ class LEDSTRIP:
 # ULTRASONIC sensor class
 #######################################################
 class ULTRASONIC:
-    def __init__(self, pin_trg, pin_echo):
+    def __init__(self, pin_trg, pin_echo, buzzer=None):
+        self._d = None
+        self._buzzer = buzzer
         self._pin_trig = Pin(pin_trg, Pin.OUT)
         self._pin_echo = Pin(pin_echo, Pin.IN)
         self._num_samples = 1
         self._pin_trig.off()
-        
-    def _measure(self):
+        self._timer = Timer()
+        self._timer.init(period=1000, mode=Timer.PERIODIC, callback=self.__tick)
+        self._d_min = 5 # cm
+
+    def __measure(self):
         # Generate 10us high pulse on trigger output
         self._pin_trig.on()
         sleep_us(10)
@@ -236,15 +242,15 @@ class ULTRASONIC:
             d = t * SPEED_OF_SOUND / 2 / 10000
         else:
             d = None
-        return d
+        return d # in cm
         
-    def distance(self):
+    def __distance(self):
         d_sum = 0
         d_cnt = 0
         # Do a series of measurements
         for _ in range(self._num_samples):
             try:
-                d_sum += self._measure()
+                d_sum += self.__measure()
                 d_cnt += 1
             except TypeError:
                 pass
@@ -253,6 +259,38 @@ class ULTRASONIC:
         else:
             d = None
         return d
+
+    def __tick(self, t):
+        #print("check distance")
+        self._d = self.__distance()
+        if self._d is not None and self._d < self._d_min:
+            print("distance is too short !!!")
+            if self._buzzer is not None:
+                self._buzzer.alarm()
+
+    def distance(self):
+        return self._d
+
+
+#######################################################
+# TRACK sensor class
+#######################################################
+class TRACK:
+    def __init__(self, pin_trk1, pin_trk2, pin_trk3, buzzer=None):
+        self._buzzer = buzzer
+        self._pin_trk1 = Pin(pin_trk1, Pin.IN)
+        self._pin_trk2 = Pin(pin_trk2, Pin.IN)
+        self._pin_trk3 = Pin(pin_trk3, Pin.IN)
+        self._pin_trk1.irq(handler=self.__irq, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
+        self._pin_trk2.irq(handler=self.__irq, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
+        self._pin_trk3.irq(handler=self.__irq, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
+
+    def __irq(self, pin):
+        print("track sensor change")
+        if pin.value() == 1:
+            print("edge detected !!!")
+            if self._buzzer is not None:
+                self._buzzer.alarm()
 
 
 #######################
