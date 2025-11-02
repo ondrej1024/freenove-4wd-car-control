@@ -16,7 +16,7 @@
 ###############################################################################
 
 from machine import RTC,Pin,I2C,PWM,UART,ADC
-from freenove_4wd_driverlib import MOTOR,SERVO,BATTERY,LEDSTRIP,ULTRASONIC,BUZZER,TRACK,UPTIME,LEDCTL
+from freenove_4wd_driverlib import MOTOR,SERVO,BATTERY,LEDSTRIP,ULTRASONIC,BUZZER,TRACK,LIGHT,UPTIME,LEDCTL
 
 # Module version
 MODVER = "0.1"
@@ -125,6 +125,7 @@ def init_ultrasonic(buzzer=None):
     u = ULTRASONIC(PIN_US_TRIG,PIN_US_ECHO,buzzer)
     return u
 
+
 ########################
 # Init Track sensor
 ########################
@@ -133,6 +134,17 @@ def init_track(buzzer=None):
     print("Init Track sensor")
     t = TRACK(PIN_TRK1,PIN_TRK2,PIN_TRK3,buzzer)
     return t
+
+
+########################
+# Init Light sensor
+########################
+def init_light():
+
+    print("Init Light sensor")
+    light = LIGHT(PIN_ADC_PR2,PIN_ADC_PR1)
+    return light
+
 
 ########################
 # Init Buzzer

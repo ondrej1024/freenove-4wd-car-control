@@ -12,7 +12,9 @@
 #   - Neopixel LED strip
 #   - Ultrasonic sensor
 #   - Track sensor
+#   - Light sensor
 #   - Buzzer
+#   - Pico Led
 #
 # Changelog:
 #   07-06-2025: Initial version
@@ -240,6 +242,7 @@ class ULTRASONIC:
         if t >= 0:
             # Calculate distance in cm
             d = t * SPEED_OF_SOUND / 2 / 10000
+            # TODO: check for max distance (infinite)
         else:
             d = None
         return d # in cm
@@ -281,16 +284,61 @@ class TRACK:
         self._pin_trk1 = Pin(pin_trk1, Pin.IN)
         self._pin_trk2 = Pin(pin_trk2, Pin.IN)
         self._pin_trk3 = Pin(pin_trk3, Pin.IN)
-        self._pin_trk1.irq(handler=self.__irq, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
-        self._pin_trk2.irq(handler=self.__irq, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
-        self._pin_trk3.irq(handler=self.__irq, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
+        self._pin_trk1.irq(handler=self.__irq1, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
+        self._pin_trk2.irq(handler=self.__irq2, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
+        self._pin_trk3.irq(handler=self.__irq3, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
+        self._val_left   = self._pin_trk1.value()
+        self._val_center = self._pin_trk1.value()
+        self._val_right  = self._pin_trk1.value()
 
-    def __irq(self, pin):
-        print("track sensor change")
-        if pin.value() == 1:
+    def __edge_detect(self):
+        if (self._val_left == 1 and self._val_center == 1 and self._val_right == 1):
             print("edge detected !!!")
             if self._buzzer is not None:
                 self._buzzer.alarm()
+
+    def __irq1(self, pin):
+        print("track sensor left change")
+        self._val_left = pin.value()
+        self.__edge_detect()
+
+    def __irq2(self, pin):
+        print("track sensor center change")
+        self._val_center = pin.value()
+        self.__edge_detect()
+
+    def __irq3(self, pin):
+        print("track sensor right change")
+        self._val_right = pin.value()
+        self.__edge_detect()
+
+    def status(self):
+        return (self._val_left, self._val_center, self._val_right)
+
+
+#######################################################
+# LIGHT sensor class
+#######################################################
+class LIGHT:
+    def __init__(self, pin_photo1, pin_photo2):
+        self._ain1 = ADC(pin_photo1)
+        self._ain2 = ADC(pin_photo2)
+        self._light_level_left = None
+        self._light_level_right = None
+        self._timer = Timer()
+        self._timer.init(period=1000, mode=Timer.PERIODIC, callback=self.__tick)
+
+    def __measure(self, adc):
+        v = adc.read_u16()*100/0xFFFF # in %
+        return round(v,1)
+
+    def __tick(self, t):
+        #print("check light")
+        self._light_level_left = self.__measure(self._ain1)
+        self._light_level_right = self.__measure(self._ain2)
+
+    def level(self):
+        return (self._light_level_left, self._light_level_right)
 
 
 #######################
