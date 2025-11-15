@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Freenove 4WD Car</title>
+        <style>
+            .myData {
+                text-align: center;
+                color: #ffffff;
+                font-size: 40px;
+                font-weight: bold;
+            }
+        </style>
+
+        <script>
+            let ws_service;
+            /*
+            append = function (text) {
+                document
+                    .getElementById("websocket_events")
+                    .insertAdjacentHTML("beforeend", "<li>" + text + ";</li>");
+            };
+            */
+            window.onload = function () {
+                ws_service = new WebSocket("ws://192.168.1.85:5000/ws");
+                ws_service.onmessage = function (event) {
+                    data = JSON.parse(event.data)
+                    let batt_val = document.getElementById("batt_val");
+                    let dist_val = document.getElementById("dist_val");
+                    let trck_val = document.getElementById("trck_val");
+                    let lite_val = document.getElementById("lite_val");
+                    batt_val.innerHTML = data.data[0]+"%"
+                    dist_val.innerHTML = data.data[1]+"cm"
+                    trck_val.innerHTML = data.data[2][0]+"-"+data.data[2][1]+"-"+data.data[2][2]
+                    lite_val.innerHTML = data.data[3][0]+"/"+data.data[3][1]+"%"
+                };
+                ws_service.onopen = function () {
+                    append("Connected to WebSocket!");
+                };
+                ws_service.onclose = function () {
+                    append("Connection closed");
+                };
+                ws_service.onerror = function () {
+                    append("Error happens");
+                };
+            };
+
+            /*
+            function sendMessage(event) {
+                console.log(event);
+                let message = document.getElementById("message").value;
+                ws_service.send(message);
+            }
+            */
+            function sendCommand(cmd) {
+                ws_service.send(cmd);
+            }
+
+        </script>
+    </head>
+    <body>
+        <main class="container">
+
+        <!-- Value display -->
+        <table style="width: 680px;">
+            <tbody>
+                <tr>
+                    <td style="width: 170px; background-color: green;">
+                        <p><span style="color: #ffffff;">Battery</span></p>
+                        <div id="batt_val" class="myData">--</div>
+                    </td>
+                    <td style="width: 170px; background-color: green;">
+                        <p><span style="color: #ffffff;">Distance</span></p>
+                        <div id="dist_val" class="myData">--</div>
+                    </td>
+                    <td style="width: 170px; background-color: green;">
+                        <p><span style="color: #ffffff;">Track</span></p>
+                        <div id="trck_val" class="myData">--</div>
+                    </td>
+                    <td style="width: 170px; background-color: green;">
+                        <p><span style="color: #ffffff;">Light source</span></p>
+                        <div id="lite_val" class="myData">--</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        </main>
+    </body>
+</html>
