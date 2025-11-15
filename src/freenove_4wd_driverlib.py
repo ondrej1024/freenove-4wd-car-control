@@ -87,6 +87,74 @@ class MOTOR:
         self._pwm1.duty_ns(0)
         self._pwm2.duty_ns(0)
 
+#######################
+# CAR class
+#######################
+class CAR:
+    def __init__(self,m1,m2,m3,m4):
+        self._m1 = m1
+        self._m2 = m2
+        self._m3 = m3
+        self._m4 = m4
+        
+    def forward(self,speed):
+        speed = abs(speed)
+        # Front wheels
+        self._m1.move(speed)
+        self._m4.move(speed)
+        # Back wheels
+        self._m2.move(speed)
+        self._m3.move(speed)
+
+    def backward(self,speed):
+        speed = -abs(speed)
+        # Front wheels
+        self._m1.move(speed)
+        self._m4.move(speed)
+        # Back wheels
+        self._m2.move(speed)
+        self._m3.move(speed)
+    
+    def spin_right(self):
+        speed = 30
+        # Left wheels
+        self._m1.move(speed)
+        self._m2.move(speed)
+        # Right wheels
+        self._m3.move(-speed)
+        self._m4.move(-speed)
+        
+    def spin_left(self):
+        speed = 30
+        # Left wheels
+        self._m1.move(-speed)
+        self._m2.move(-speed)
+        # Right wheels
+        self._m3.move(speed)
+        self._m4.move(speed)
+
+    def turn_right(self,speed):
+        # Left wheels
+        self._m1.move(speed)
+        self._m2.move(speed)
+        # Right wheels
+        self._m3.move(0)
+        self._m4.move(0)
+        
+    def turn_left(self,speed):
+        # Left wheels
+        self._m1.move(0)
+        self._m2.move(0)
+        # Right wheels
+        self._m3.move(speed)
+        self._m4.move(speed)
+        
+    def stop(self):
+        self._m1.stop()
+        self._m2.stop()
+        self._m3.stop()
+        self._m4.stop()
+
 
 #######################
 # SERVO class
@@ -258,10 +326,10 @@ class ULTRASONIC:
             except TypeError:
                 pass
         if d_cnt > 0:
-            d = d_sum/d_cnt
+            d = round(d_sum/d_cnt,1)
         else:
             d = None
-        return d
+        return d # in cm
 
     def __tick(self, t):
         #print("check distance")
@@ -272,7 +340,7 @@ class ULTRASONIC:
                 self._buzzer.alarm()
 
     def distance(self):
-        return self._d
+        return (self._d)
 
 
 #######################################################
@@ -330,7 +398,7 @@ class LIGHT:
 
     def __measure(self, adc):
         v = adc.read_u16()*100/0xFFFF # in %
-        return round(v,1)
+        return int(round(v))
 
     def __tick(self, t):
         #print("check light")

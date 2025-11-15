@@ -16,7 +16,7 @@
 ###############################################################################
 
 from machine import RTC,Pin,I2C,PWM,UART,ADC
-from freenove_4wd_driverlib import MOTOR,SERVO,BATTERY,LEDSTRIP,ULTRASONIC,BUZZER,TRACK,LIGHT,UPTIME,LEDCTL
+from freenove_4wd_driverlib import MOTOR,CAR,SERVO,BATTERY,LEDSTRIP,ULTRASONIC,BUZZER,TRACK,LIGHT,UPTIME,LEDCTL
 
 # Module version
 MODVER = "0.1"
@@ -84,6 +84,14 @@ def init_motors():
     motors.append(MOTOR(PIN_M3_IN1,PIN_M3_IN2))
     motors.append(MOTOR(PIN_M4_IN1,PIN_M4_IN2))
     return motors
+
+
+#######################
+# Init car
+#######################
+def init_car(m1,m2,m3,m4):
+    print("Init Car")
+    car = CAR(m1,m2,m3,m4)
 
 
 #######################
