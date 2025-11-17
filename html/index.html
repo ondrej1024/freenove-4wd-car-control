@@ -21,7 +21,7 @@
             };
             */
             window.onload = function () {
-                ws_service = new WebSocket("ws://192.168.1.85:5000/ws");
+                ws_service = new WebSocket("ws://robocar.local:5000/ws");
                 ws_service.onmessage = function (event) {
                     data = JSON.parse(event.data)
                     let batt_val = document.getElementById("batt_val");

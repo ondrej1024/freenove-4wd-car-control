@@ -53,7 +53,7 @@ Globals.car = freenove_4wd_hardware.init_car(m1,m2,m3,m4)
 
 # Init led
 Globals.led = freenove_4wd_hardware.init_led()
-Globals.led.on()
+Globals.led.heartbeat()
 
 # Init Neopixel LED strip
 Globals.neo = freenove_4wd_hardware.init_ledstrip()
@@ -89,6 +89,8 @@ Globals.lit = freenove_4wd_hardware.init_light()
 
 # Init network
 net.connect_network()
+Globals.led.on()
+Globals.neo.blink("G")
 
 
 '''

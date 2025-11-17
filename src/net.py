@@ -26,8 +26,9 @@ from microdot import send_file
 from microdot.websocket import with_websocket
 from globals import Globals
 
-SSID = "my SSID"
-PASS = "my password"
+SSID = "ssid"
+PASS = "pass"
+HOST = "robocar"
 
 
 #####################################
@@ -35,6 +36,7 @@ PASS = "my password"
 #####################################
 def connect_network():
     print ("Init Network")
+    network.hostname(HOST)
     nic = network.WLAN(network.WLAN.IF_STA)
     nic.active(True)
     nic.connect(ssid=SSID, key=PASS)
@@ -45,7 +47,7 @@ def connect_network():
         print("   status: %d" % status)
         if nic.isconnected() and status == network.STAT_GOT_IP:
             break
-    print("   connected with IP %s, gateway %s" % (nic.ipconfig("addr4")[0],nic.ipconfig("gw4")))
+    print("   connected with hostname %s, IP %s, gateway %s" % (network.hostname(),nic.ipconfig("addr4")[0],nic.ipconfig("gw4")))
 
 
 #####################################
