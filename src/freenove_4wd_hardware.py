@@ -89,9 +89,14 @@ def init_motors():
 #######################
 # Init car
 #######################
-def init_car(m1,m2,m3,m4):
+def init_car():
     print("Init Car")
+    m1 = MOTOR(PIN_M1_IN1,PIN_M1_IN2)
+    m2 = MOTOR(PIN_M2_IN1,PIN_M2_IN2)
+    m3 = MOTOR(PIN_M3_IN1,PIN_M3_IN2)
+    m4 = MOTOR(PIN_M4_IN1,PIN_M4_IN2)
     car = CAR(m1,m2,m3,m4)
+    return car
 
 
 #######################
@@ -127,20 +132,20 @@ def init_ledstrip():
 ########################
 # Init Ultrasonic sensor
 ########################
-def init_ultrasonic(buzzer=None):
+def init_ultrasonic(car=None, buzzer=None):
 
     print("Init Ultrasonic sensor")
-    u = ULTRASONIC(PIN_US_TRIG,PIN_US_ECHO,buzzer)
+    u = ULTRASONIC(PIN_US_TRIG,PIN_US_ECHO,car,buzzer)
     return u
 
 
 ########################
 # Init Track sensor
 ########################
-def init_track(buzzer=None):
+def init_track(car=None, buzzer=None):
 
     print("Init Track sensor")
-    t = TRACK(PIN_TRK1,PIN_TRK2,PIN_TRK3,buzzer)
+    t = TRACK(PIN_TRK1,PIN_TRK2,PIN_TRK3,car,buzzer)
     return t
 
 

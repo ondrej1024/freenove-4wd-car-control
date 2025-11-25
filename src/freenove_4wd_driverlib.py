@@ -28,7 +28,7 @@
 import machine
 from machine import Pin,PWM,ADC,I2C,Timer
 from neopixel import NeoPixel
-from time import sleep_us,sleep_ms
+from time import sleep_us,sleep_ms,ticks_us,ticks_diff
 
 # Module version
 MODVER = "0.1"
@@ -67,20 +67,20 @@ class MOTOR:
             self._pwm1.duty_ns(0)
             if self._pwm2.duty_ns() == 0 and boost_start:
                 # Boost start needed:
-                # Apply min speed for 50 ms
-                print("apply boost start")
+                # Apply min speed for 100 ms
+                print("apply boost start backward")
                 self._pwm2.duty_ns(self._min_duty_start)
-                sleep_ms(50)
+                sleep_ms(100)
             self._pwm2.duty_ns(duty_ns)
         else:
             # Move forward
             self._pwm2.duty_ns(0)
             if self._pwm1.duty_ns() == 0 and boost_start:
                 # Boost start needed:
-                # Apply min speed for 50 ms
-                print("apply boost start")
+                # Apply min speed for 100 ms
+                print("apply boost start forward")
                 self._pwm1.duty_ns(self._min_duty_start)
-                sleep_ms(50)
+                sleep_ms(100)
             self._pwm1.duty_ns(duty_ns)
 
     def stop(self):
@@ -289,55 +289,64 @@ class LEDSTRIP:
 # ULTRASONIC sensor class
 #######################################################
 class ULTRASONIC:
-    def __init__(self, pin_trg, pin_echo, buzzer=None):
+    def __init__(self, pin_trg, pin_echo, car=None, buzzer=None):
         self._d = None
+        self._is_alarm = False
+        self._start_time = 0
+        self._car = car
         self._buzzer = buzzer
         self._pin_trig = Pin(pin_trg, Pin.OUT)
-        self._pin_echo = Pin(pin_echo, Pin.IN)
-        self._num_samples = 1
         self._pin_trig.off()
+        self._pin_echo = Pin(pin_echo, Pin.IN)
+        self._pin_echo.irq(handler=self.__irq_pin, trigger=Pin.IRQ_FALLING | Pin.IRQ_RISING)
         self._timer = Timer()
-        self._timer.init(period=1000, mode=Timer.PERIODIC, callback=self.__tick)
-        self._d_min = 5 # cm
+        self._timer.init(period=200, mode=Timer.PERIODIC, callback=self.__irq_timer)
+        self._d_scale = SPEED_OF_SOUND / 2 / 10000
+        self._d_min = 10 # cm
+        self._t_max = 70000 # us
 
-    def __measure(self):
+    def __check_dist(self,d_cm):
+        # Check for min distance
+        if d_cm < self._d_min:
+            if not self._is_alarm:
+                print("distance is too short !!!")
+                self._is_alarm = True
+                if self._car is not None:
+                    self._car.stop()
+                if self._buzzer is not None:
+                    self._buzzer.alarm()
+        else:
+            self._is_alarm = False
+
+    def __irq_timer(self,t):
+        # This is called periodically
         # Generate 10us high pulse on trigger output
+        #print("   trigger pin pulse")
         self._pin_trig.on()
         sleep_us(10)
         self._pin_trig.off()
-        # Measure high pulse length in us on echo input
-        t = machine.time_pulse_us(self._pin_echo, 1)
-        if t >= 0:
-            # Calculate distance in cm
-            d = t * SPEED_OF_SOUND / 2 / 10000
-            # TODO: check for max distance (infinite)
-        else:
-            d = None
-        return d # in cm
         
-    def __distance(self):
-        d_sum = 0
-        d_cnt = 0
-        # Do a series of measurements
-        for _ in range(self._num_samples):
-            try:
-                d_sum += self.__measure()
-                d_cnt += 1
-            except TypeError:
-                pass
-        if d_cnt > 0:
-            d = round(d_sum/d_cnt,1)
+    def __irq_pin(self,pin):
+        # This is called when echo input pin is triggered
+        # Measure high pulse length in us on echo input
+        if pin.value() == 1:
+            # Start time measurement
+            #print("   echo ping high")
+            self._start_time = ticks_us()
         else:
-            d = None
-        return d # in cm
-
-    def __tick(self, t):
-        #print("check distance")
-        self._d = self.__distance()
-        if self._d is not None and self._d < self._d_min:
-            print("distance is too short !!!")
-            if self._buzzer is not None:
-                self._buzzer.alarm()
+            # Finish time measurement
+            #print("   echo ping low")
+            t_us = ticks_diff(ticks_us(),self._start_time)
+            #print("   t=%d us" % t_us)
+            self._start_time = 0
+            if t_us >= 0 and t_us < self._t_max:
+                # Calculate distance in cm
+                d_cm = round(t_us * self._d_scale,1)
+                self.__check_dist(d_cm)
+            else:
+                # Invalid measurement
+                d_cm = None
+            self._d = d_cm
 
     def distance(self):
         return (self._d)
@@ -347,7 +356,8 @@ class ULTRASONIC:
 # TRACK sensor class
 #######################################################
 class TRACK:
-    def __init__(self, pin_trk1, pin_trk2, pin_trk3, buzzer=None):
+    def __init__(self, pin_trk1, pin_trk2, pin_trk3, car=None, buzzer=None):
+        self._car = car
         self._buzzer = buzzer
         self._pin_trk1 = Pin(pin_trk1, Pin.IN)
         self._pin_trk2 = Pin(pin_trk2, Pin.IN)
@@ -362,6 +372,8 @@ class TRACK:
     def __edge_detect(self):
         if (self._val_left == 1 and self._val_center == 1 and self._val_right == 1):
             print("edge detected !!!")
+            if self._car is not None:
+                self._car.stop()
             if self._buzzer is not None:
                 self._buzzer.alarm()
 
