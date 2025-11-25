@@ -30,11 +30,14 @@ SSID = "ssid"
 PASS = "pass"
 HOST = "robocar"
 
+nic = None
+
 
 #####################################
 # Network connection
 #####################################
 def connect_network():
+    global nic
     print ("Init Network")
     network.hostname(HOST)
     nic = network.WLAN(network.WLAN.IF_STA)
@@ -48,7 +51,20 @@ def connect_network():
         if nic.isconnected() and status == network.STAT_GOT_IP:
             break
     print("   connected with hostname %s, IP %s, gateway %s" % (network.hostname(),nic.ipconfig("addr4")[0],nic.ipconfig("gw4")))
+    print("   signal strength: %d" % nic.status("rssi"))
 
+
+#####################################
+# Network status
+#####################################
+def network_status():
+    global nic
+    netstat = {"ip":nic.ipconfig("addr4")[0],
+               "gw":nic.ipconfig("gw4"),
+               "ss":nic.status("rssi"),
+               "id":SSID}
+    return netstat    
+    
 
 #####################################
 # Websockets server
@@ -64,34 +80,57 @@ async def index(request):
 @webapp.route('/ws')
 @with_websocket
 async def handle_ws(request, ws):
-    cnt = 1
     try:
         print("websocket: start ws handler")
         while True:
-            #message = await ws.receive()
+            
+            # Wait for message
+            message = await ws.receive()
+            print("WS message received: %s" % (message))
+            if message == "forward":
+                Globals.car.forward(20)
+            elif message == "backward":
+                Globals.car.backward(20)
+            elif message == "turnleft":
+                Globals.car.turn_left(30)
+            elif message == "turnright":
+                Globals.car.turn_right(30)
+            elif message == "spinleft":
+                Globals.car.spin_left()
+            elif message == "spinright":
+                Globals.car.spin_right()
+            elif message == "stop":
+                Globals.car.stop()
+                
             #try:
             #    message = asyncio.wait_for(ws.receive(),1)
             #    print("received message: %s" % message)
             #except asyncio.TimeoutError:
             #    pass
             
+            # Get network status
+            net = network_status()
+            
+            # Send sensor data
             payload = {"data":[Globals.bat.perc(),
                                Globals.ult.distance(),
                                Globals.trk.status(),
                                Globals.lit.level()
+                              ],
+                       "net": [net["ip"],
+                               net["gw"],
+                               net["ss"],
+                               net["id"]
                               ]
                       }
-            
             await ws.send(json.dumps(payload))
-            #await ws.send(str(cnt))
-            cnt = cnt + 1
-            await asyncio.sleep(1)
+            #await asyncio.sleep(1)
     except asyncio.CancelledError:
         print("Client disconnected!")
 
 async def webserver():
     print("Start Websocket server")
-    server = asyncio.create_task(webapp.start_server())
+    server = asyncio.create_task(webapp.start_server(port=80))
     await server
 
 def start_webserver():
