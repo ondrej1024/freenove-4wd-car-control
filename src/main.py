@@ -14,10 +14,12 @@ async def sensormon():
     while True:
         await asyncio.sleep(2)
         try:
+            '''
             print("battery voltage is %.2fV (%d%%)" % (Globals.bat.voltage(),Globals.bat.perc()))
             print("obstacle %.2f cm ahead" % Globals.ult.distance())
             print("track status is %d-%d-%d" % Globals.trk.status())
             print("light level left %.1f%% / right %.1f%%" % Globals.lit.level())
+            '''
         except TypeError:
             pass
         print()
@@ -30,7 +32,7 @@ async def main_core0():
     # Start all modules as concurrent tasks
     # Each module executes an infinite loop
     await asyncio.gather(net.webserver(),
-                         sensormon()
+                         #sensormon()
                         )
 
 
@@ -46,10 +48,11 @@ def run_core0():
 ###########################################################
 
 # Init motors
-(m1,m2,m3,m4) = freenove_4wd_hardware.init_motors()
+#(m1,m2,m3,m4) = freenove_4wd_hardware.init_motors()
 
 # Init car
-Globals.car = freenove_4wd_hardware.init_car(m1,m2,m3,m4)
+Globals.car = freenove_4wd_hardware.init_car()
+Globals.car.stop()
 
 # Init led
 Globals.led = freenove_4wd_hardware.init_led()
@@ -76,11 +79,11 @@ Globals.buz = freenove_4wd_hardware.init_buzzer()
 #buz.beep()
 
 # Init Ultrasonic sensor
-Globals.ult = freenove_4wd_hardware.init_ultrasonic(buzzer=Globals.buz)
+Globals.ult = freenove_4wd_hardware.init_ultrasonic(car=Globals.car, buzzer=Globals.buz)
 #sleep(DELAY_WAIT)
 
 # Init Track sensor
-Globals.trk = freenove_4wd_hardware.init_track(buzzer=Globals.buz)
+Globals.trk = freenove_4wd_hardware.init_track(car=Globals.car, buzzer=Globals.buz)
 #sleep(DELAY_WAIT)
 
 # Init Light sensor
@@ -89,7 +92,7 @@ Globals.lit = freenove_4wd_hardware.init_light()
 
 # Init network
 net.connect_network()
-Globals.led.on()
+Globals.led.blinkslow()
 Globals.neo.blink("G")
 
 
